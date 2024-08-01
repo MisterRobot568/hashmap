@@ -30,16 +30,9 @@ class HashMap {
         this.buckets.forEach((bucket) => {
             // maybe an if statement here to check if buckets are not empty? or does loop cover that?
             if (bucket !== null) {
-                // console.log("What i'm giving it");
-                // console.log(bucket);
-                // console.log(bucket.size());
                 while (bucket.size() > 0) {
                     let value = bucket.pop().value;
                     let key = bucket.pop().value; // may have to modify .pop() in linked-list for this to work
-                    // newArr.set(key, value);
-                    console.log('Key, value:');
-                    // console.log(key);
-                    // console.log(value);
                     this.set(key, value, newArr); //// NEED TO FIGURE OUT HOW TO USE SET() METHOD IN GROW BUCKETS
                 }
             }
@@ -52,63 +45,46 @@ class HashMap {
     // 2) add the key/value pair as arrays in each bucket?
 
     set(key, value, bucketArray = this.buckets) {
-        // before setting a vlue, check to see if we need to grow
-        if (this.length() / this.numBuckets > 0.75) {
+        // before setting a value, check to see if we need to grow
+        // console.log(bucketArray.length() + 1);
+        let growthFactor = (this.length() + 1) / this.numBuckets;
+        // console.log(bucketArray);
+        console.log(`growth factor ${growthFactor}`);
+        if (
+            (this.length() + 1) / this.numBuckets > 0.75 &&
+            bucketArray === this.buckets
+        ) {
             this.growBuckets();
+            console.log('growing');
         }
         let hashVal = this.hash(key) % this.numBuckets; // Adjust for new size
         let currentBucket = bucketArray[hashVal];
 
-        if (currentBucket === null || currentBucket.contains(key) === false) {
+        if (currentBucket === null || currentBucket === undefined) {
+            // if current bucket is empty
             let linkedList = new LinkedList();
             linkedList.append(key);
             linkedList.append(value);
             bucketArray[hashVal] = linkedList;
         } else if (currentBucket.contains(key) === false) {
+            // if current bucket not empty, but doesn't contain our key
             bucketArray[hashVal].append(key);
             bucketArray[hashVal].append(value);
         } else if (currentBucket.contains(key)) {
+            // if current bucket does contain our key
             let keyIndex = currentBucket.find(key);
             if (keyIndex % 2 === 0) {
+                // overwrite the value for the key if already there
                 bucketArray[hashVal].removeAt(keyIndex + 1);
                 bucketArray[hashVal].insertAt(value, keyIndex + 1);
             } else {
+                // add the key/value pair
                 bucketArray[hashVal].append(key);
                 bucketArray[hashVal].append(value);
             }
         }
     }
-    // set(key, value, bucketArray = this.buckets ) {
-    //     let hashVal = this.hash(key);
-    //     // console.log(hashVal);
-    //     let currentBucket = this.buckets[hashVal];
-    //     // if bucket is empty or if the bucket does not contain the key, add key/value as a linked list
-    //     if (currentBucket === null || currentBucket.contains(key) === false) {
-    //         let linkedList = new LinkedList();
-    //         linkedList.append(key);
-    //         linkedList.append(value);
-    //         // currentBucket = linkedList;
-    //         this.buckets[hashVal] = linkedList;
-    //     } else if (currentBucket.contains(key) === false) {
-    //         // if already a linked list, but does not contain our key yet
-    //         this.buckets[hashVal].append(key);
-    //         this.buckets[hashVal].append(value);
-    //     } else if (currentBucket.contains('key')) {
-    //         // here we have to check if the key already appears in the linked list. If it does, check if it's a key or a value. If it's a key, overwrite. If it's a value we can just go ahead and add our key/value pair to the linked list
 
-    //         let keyIndex = currentBucket.find(key);
-    //         if (keyIndex % 2 === 0) {
-    //             // if our key appears as a key in linked list already, then overwrite it's value
-    //             this.buckets[hashVal].removeAt(keyIndex + 1);
-    //             this.buckets[hashVal].insertAt(value, keyIndex + 1);
-    //         } else {
-    //             // if our key appears in the linked list, but is a value and not a key
-    //             this.buckets[hashVal].append(key);
-    //             this.buckets[hashVal].append(value);
-    //         }
-    //     }
-    // }
-    // get(key) takes key argument, returns the value of the key. If key not found return null
     get(key) {
         let hashCode = this.hash(key);
         let currentBucket = this.buckets[hashCode];
@@ -140,29 +116,24 @@ class HashMap {
     remove(key) {
         if (this.has(key)) {
             let hashCode = this.hash(key);
-            if (this.buckets[hashCode].size < 2) {
+            if (this.buckets[hashCode].size() <= 2) {
                 this.buckets[hashCode] = null;
-            } //STILL LEAVES A LINKEDLIST, JUST MAKES THE NODE NULL.
-            // NEED TO ACTUALLY DELETE THE LINKED LIST
-
-            // this.buckets[hashCode].find(key)
-            let keyIndex = this.buckets[hashCode].find(key);
-            // console.log(keyIndex);
-            this.buckets[hashCode].removeAt(keyIndex);
-            this.buckets[hashCode].removeAt(keyIndex);
+            } else {
+                let keyIndex = this.buckets[hashCode].find(key);
+                this.buckets[hashCode].removeAt(keyIndex);
+                this.buckets[hashCode].removeAt(keyIndex);
+            }
             return true;
         }
         return false;
     }
 
     // length() returns the length of store keys in the hash map
-
     length() {
         let length = 0;
         for (let i = 0; i < this.buckets.length; i++) {
             if (this.buckets[i] != null) {
                 let num_nodes = this.buckets[i].size();
-                console.log(num_nodes);
                 length += this.buckets[i].size() / 2;
             }
         }
@@ -178,7 +149,6 @@ class HashMap {
     keys() {
         let keyArr = [];
         this.buckets.forEach((bucket) => {
-            // let current = bucket;
             if (bucket !== null) {
                 // nested loop is shit coding practice!
                 for (let i = 0; i < bucket.size(); i++) {
@@ -195,7 +165,7 @@ class HashMap {
     values() {
         let valArr = [];
         this.buckets.forEach((bucket) => {
-            let current = bucket;
+            // let current = bucket;
             if (bucket !== null) {
                 // nested loop is shit coding practice!
                 for (let i = 0; i < bucket.size(); i++) {
@@ -219,47 +189,5 @@ class HashMap {
         }
         return keyValuePairs;
     }
-
-    // set(key, value) {
-    //     let hashVal = this.hash(key);
-    //     console.log(hashVal);
-    //     if (
-    //         // if bucket is empty or bucket already contains matching key,
-    //         this.buckets[hashVal].length === 0 ||
-    //         this.buckets[hashVal][0] === key
-    //     ) {
-    //         // if bucket is
-    //         this.buckets[hashVal][0] = key;
-    //         this.buckets[hashVal][1] = value;
-    //     } else {
-    //         // condition if bucket is not empty, and also does not contain the current key
-    //         // here we probably expand the table size(double the buckets)
-    //         // we are unlikely to get collisions but sometimes we still do get collisions
-    //         // DEAL WITH COLLISIONS
-    //     }
-    // }
-    // // get(key) takes key argument, returns the value of the key. If key not found return null
-    // get(key) {
-    //     let hashCode = this.hash(key);
-    //     if (this.buckets[hashCode].length === 0) {
-    //         return null;
-    //     } else {
-    //         return this.buckets[hashCode][1];
-    //     }
-    // }
-
-    // // has(key) takes the key as an argument and return true of false
-    // // based on whether or not the key is in the hashmap
-    // has(key) {
-    //     let hashCode = this.hash(key);
-    //     if (
-    //         this.buckets[hashCode].length === 0 ||
-    //         this.buckets[hashCode][0] !== key
-    //     ) {
-    //         return false;
-    //     } else {
-    //         return true;
-    //     }
-    // }
 }
 export default HashMap;
